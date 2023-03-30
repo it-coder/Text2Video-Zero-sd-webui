@@ -1,17 +1,26 @@
 import gradio as gr
 from model import Model
-from modules import scripts
+import os
+on_huggingspace = os.environ.get("SPACE_AUTHOR_NAME") == "PAIR"
+
 
 def create_demo(model: Model):
 
     examples = [
-        ["extensions/Text2Video-Zero-sd-webui/__assets__/canny_videos_edge/butterfly.mp4", "white butterfly, a high-quality, detailed, and professional photo"],
-        ["extensions/Text2Video-Zero-sd-webui/__assets__/canny_videos_edge/deer.mp4", "oil painting of a deer, a high-quality, detailed, and professional photo"],
-        ["extensions/Text2Video-Zero-sd-webui/__assets__/canny_videos_edge/fox.mp4", "wild red fox is walking on the grass, a high-quality, detailed, and professional photo"],
-        ["extensions/Text2Video-Zero-sd-webui/__assets__/canny_videos_edge/girl_dancing.mp4", "oil painting of a girl dancing close-up, masterpiece, a high-quality, detailed, and professional photo"],
-        ["extensions/Text2Video-Zero-sd-webui/__assets__/canny_videos_edge/girl_turning.mp4", "oil painting of a beautiful girl, a high-quality, detailed, and professional photo"],
-        ["extensions/Text2Video-Zero-sd-webui/__assets__/canny_videos_edge/halloween.mp4", "beautiful girl halloween style, a high-quality, detailed, and professional photo"],
-        ["extensions/Text2Video-Zero-sd-webui/__assets__/canny_videos_edge/santa.mp4", "a santa claus, a high-quality, detailed, and professional photo"],
+        ["__assets__/canny_videos_edge_2fps/butterfly.mp4",
+            "white butterfly, a high-quality, detailed, and professional photo"],
+        ["__assets__/canny_videos_edge_2fps/deer.mp4",
+            "oil painting of a deer, a high-quality, detailed, and professional photo"],
+        ["__assets__/canny_videos_edge_2fps/fox.mp4",
+            "wild red fox is walking on the grass, a high-quality, detailed, and professional photo"],
+        ["__assets__/canny_videos_edge_2fps/girl_dancing.mp4",
+            "oil painting of a girl dancing close-up, masterpiece, a high-quality, detailed, and professional photo"],
+        ["__assets__/canny_videos_edge_2fps/girl_turning.mp4",
+            "oil painting of a beautiful girl, a high-quality, detailed, and professional photo"],
+        ["__assets__/canny_videos_edge_2fps/halloween.mp4",
+            "beautiful girl halloween style, a high-quality, detailed, and professional photo"],
+        ["__assets__/canny_videos_edge_2fps/santa.mp4",
+            "a santa claus, a high-quality, detailed, and professional photo"],
     ]
 
     with gr.Blocks() as demo:
@@ -29,23 +38,31 @@ def create_demo(model: Model):
 
         with gr.Row():
             with gr.Column():
-                input_video = gr.Video(label="Input Video",source='upload', format="mp4", visible=True).style(height="auto")
+                input_video = gr.Video(
+                    label="Input Video", source='upload', format="mp4", visible=True).style(height="auto")
             with gr.Column():
                 prompt = gr.Textbox(label='Prompt')
                 run_button = gr.Button(label='Run')
+                with gr.Accordion('Advanced options', open=False):
+                    watermark = gr.Radio(["Picsart AI Research", "Text2Video-Zero",
+                                         "None"], label="Watermark", value='Picsart AI Research')
+                    chunk_size = gr.Slider(
+                        label="Chunk size", minimum=2, maximum=8, value=8, step=1, visible=not on_huggingspace)
             with gr.Column():
                 result = gr.Video(label="Generated Video").style(height="auto")
 
         inputs = [
             input_video,
-            prompt, 
+            prompt,
+            chunk_size,
+            watermark,
         ]
 
         gr.Examples(examples=examples,
                     inputs=inputs,
                     outputs=result,
                     fn=model.process_controlnet_canny,
-                    cache_examples = True,
+                    cache_examples=on_huggingspace,
                     run_on_click=False,
                     )
 
